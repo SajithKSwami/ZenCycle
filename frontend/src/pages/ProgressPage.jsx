@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { Header } from '../components/Header';
+import { Footer } from '../components/Footer';
 import { SettingsModal } from '../components/SettingsModal';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
