@@ -307,6 +307,13 @@ export default function AuthPage() {
                     </div>
                 </div>
             </main>
+
+            {/* Forgot Password Modal */}
+            <ForgotPasswordModal
+                isOpen={showForgotPassword}
+                onClose={() => setShowForgotPassword(false)}
+                onBackToLogin={() => setShowForgotPassword(false)}
+            />
         </div>
     );
 }
