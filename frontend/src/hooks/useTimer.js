@@ -12,10 +12,16 @@ export const useTimer = (onBreakStart, onWaterReminder, onSessionComplete) => {
     const [isPaused, setIsPaused] = useState(false);
     const [mode, setMode] = useState('work'); // 'work' or 'break'
     const [currentSessionId, setCurrentSessionId] = useState(null);
-    const [lastWaterReminder, setLastWaterReminder] = useState(0);
+    const [waterTimerSeconds, setWaterTimerSeconds] = useState(0); // Counts up from 0 to 30 min
     
     const intervalRef = useRef(null);
-    const startTimeRef = useRef(null);
+    const waterIntervalRef = useRef(null);
+    const onWaterReminderRef = useRef(onWaterReminder);
+
+    // Keep callback ref updated
+    useEffect(() => {
+        onWaterReminderRef.current = onWaterReminder;
+    }, [onWaterReminder]);
 
     // Load saved state on mount
     useEffect(() => {
@@ -26,7 +32,7 @@ export const useTimer = (onBreakStart, onWaterReminder, onSessionComplete) => {
             setIsPaused(savedState.isPaused || false);
             setMode(savedState.mode || 'work');
             setCurrentSessionId(savedState.currentSessionId);
-            setLastWaterReminder(savedState.lastWaterReminder || 0);
+            setWaterTimerSeconds(savedState.waterTimerSeconds || 0);
         }
     }, []);
 
@@ -38,44 +44,81 @@ export const useTimer = (onBreakStart, onWaterReminder, onSessionComplete) => {
             isPaused,
             mode,
             currentSessionId,
-            lastWaterReminder,
+            waterTimerSeconds,
         });
-    }, [timeLeft, isRunning, isPaused, mode, currentSessionId, lastWaterReminder]);
+    }, [timeLeft, isRunning, isPaused, mode, currentSessionId, waterTimerSeconds]);
 
-    // Timer tick logic
+    // Main timer tick logic
     useEffect(() => {
         if (isRunning && !isPaused) {
             intervalRef.current = setInterval(() => {
                 setTimeLeft((prev) => {
                     const newTime = prev - 1;
                     
-                    // Water reminder check (only during work mode)
-                    if (mode === 'work') {
-                        const elapsed = (mode === 'work' ? WORK_DURATION : BREAK_DURATION) - newTime;
-                        const shouldRemind = elapsed - lastWaterReminder >= WATER_REMINDER_INTERVAL;
-                        if (shouldRemind && onWaterReminder) {
-                            onWaterReminder();
-                            setLastWaterReminder(elapsed);
-                        }
-                    }
-                    
                     // Timer complete
                     if (newTime <= 0) {
-                        handleTimerComplete();
                         return 0;
                     }
                     
                     return newTime;
                 });
             }, 1000);
+        } else {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
         }
 
         return () => {
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
+                intervalRef.current = null;
             }
         };
-    }, [isRunning, isPaused, mode, lastWaterReminder, onWaterReminder]);
+    }, [isRunning, isPaused]);
+
+    // Water reminder timer - separate interval that resets every 30 min
+    useEffect(() => {
+        if (isRunning && !isPaused && mode === 'work') {
+            waterIntervalRef.current = setInterval(() => {
+                setWaterTimerSeconds((prev) => {
+                    const newSeconds = prev + 1;
+                    
+                    // Check if 30 minutes have passed
+                    if (newSeconds >= WATER_REMINDER_INTERVAL) {
+                        // Trigger water reminder
+                        if (onWaterReminderRef.current) {
+                            onWaterReminderRef.current();
+                        }
+                        // Reset water timer to 0
+                        return 0;
+                    }
+                    
+                    return newSeconds;
+                });
+            }, 1000);
+        } else {
+            if (waterIntervalRef.current) {
+                clearInterval(waterIntervalRef.current);
+                waterIntervalRef.current = null;
+            }
+        }
+
+        return () => {
+            if (waterIntervalRef.current) {
+                clearInterval(waterIntervalRef.current);
+                waterIntervalRef.current = null;
+            }
+        };
+    }, [isRunning, isPaused, mode]);
+
+    // Handle timer completion
+    useEffect(() => {
+        if (timeLeft === 0 && isRunning) {
+            handleTimerComplete();
+        }
+    }, [timeLeft, isRunning]);
 
     const handleTimerComplete = useCallback(async () => {
         setIsRunning(false);
@@ -97,13 +140,13 @@ export const useTimer = (onBreakStart, onWaterReminder, onSessionComplete) => {
             // Switch to break mode
             setMode('break');
             setTimeLeft(BREAK_DURATION);
-            setLastWaterReminder(0);
+            setWaterTimerSeconds(0);
             if (onBreakStart) onBreakStart();
         } else {
             // Break complete, ready for new work session
             setMode('work');
             setTimeLeft(WORK_DURATION);
-            setLastWaterReminder(0);
+            setWaterTimerSeconds(0);
             setCurrentSessionId(null);
             if (onSessionComplete) onSessionComplete();
         }
@@ -119,7 +162,8 @@ export const useTimer = (onBreakStart, onWaterReminder, onSessionComplete) => {
             }
         }
         
-        startTimeRef.current = Date.now();
+        // Reset water timer when starting
+        setWaterTimerSeconds(0);
         setIsRunning(true);
         setIsPaused(false);
     }, [currentSessionId, mode]);
@@ -137,7 +181,7 @@ export const useTimer = (onBreakStart, onWaterReminder, onSessionComplete) => {
         setIsPaused(false);
         setMode('work');
         setTimeLeft(WORK_DURATION);
-        setLastWaterReminder(0);
+        setWaterTimerSeconds(0);
         setCurrentSessionId(null);
         timerStorage.clear();
     }, []);
@@ -146,7 +190,7 @@ export const useTimer = (onBreakStart, onWaterReminder, onSessionComplete) => {
         if (mode === 'work') {
             setMode('break');
             setTimeLeft(BREAK_DURATION);
-            setLastWaterReminder(0);
+            setWaterTimerSeconds(0);
             setIsRunning(false);
             setIsPaused(false);
         }
@@ -156,12 +200,15 @@ export const useTimer = (onBreakStart, onWaterReminder, onSessionComplete) => {
         if (mode === 'break') {
             setMode('work');
             setTimeLeft(WORK_DURATION);
-            setLastWaterReminder(0);
+            setWaterTimerSeconds(0);
             setIsRunning(false);
             setIsPaused(false);
             setCurrentSessionId(null);
         }
     }, [mode]);
+
+    // Calculate time until next water reminder
+    const timeUntilWaterReminder = WATER_REMINDER_INTERVAL - waterTimerSeconds;
 
     return {
         timeLeft,
@@ -170,6 +217,8 @@ export const useTimer = (onBreakStart, onWaterReminder, onSessionComplete) => {
         mode,
         totalDuration: mode === 'work' ? WORK_DURATION : BREAK_DURATION,
         progress: ((mode === 'work' ? WORK_DURATION : BREAK_DURATION) - timeLeft) / (mode === 'work' ? WORK_DURATION : BREAK_DURATION) * 100,
+        waterTimerSeconds,
+        timeUntilWaterReminder,
         start,
         pause,
         resume,
