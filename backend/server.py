@@ -23,7 +23,7 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # JWT and Password Config
-JWT_SECRET = os.environ.get('JWT_SECRET', 'zencycle_secret_key')
+JWT_SECRET = os.environ['JWT_SECRET']
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24 * 7  # 1 week
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -575,18 +575,26 @@ async def get_progress(period: str, current_user: dict = Depends(get_current_use
     
     end_date = now.strftime("%Y-%m-%d")
     
-    # Get sessions
+    # Get sessions with projection for optimization
     sessions = await db.sessions.find(
         {
             "user_id": current_user["id"],
             "start_time": {"$gte": start_date, "$lte": end_date + "T23:59:59"}
         },
-        {"_id": 0}
+        {"_id": 0, "session_type": 1, "completed": 1}
     ).to_list(1000)
     
-    total_sessions = len([s for s in sessions if s["session_type"] == "work"])
-    completed_sessions = len([s for s in sessions if s["session_type"] == "work" and s.get("completed")])
-    total_breaks = len([s for s in sessions if s["session_type"] == "break"])
+    # Single iteration for efficiency
+    total_sessions = 0
+    completed_sessions = 0
+    total_breaks = 0
+    for s in sessions:
+        if s["session_type"] == "work":
+            total_sessions += 1
+            if s.get("completed"):
+                completed_sessions += 1
+        elif s["session_type"] == "break":
+            total_breaks += 1
     
     # Get water intakes
     water_count = await db.water_intakes.count_documents(
@@ -596,13 +604,13 @@ async def get_progress(period: str, current_user: dict = Depends(get_current_use
         }
     )
     
-    # Get mood counts
+    # Get mood counts with projection for optimization
     moods = await db.moods.find(
         {
             "user_id": current_user["id"],
             "date": {"$gte": start_date, "$lte": end_date}
         },
-        {"_id": 0}
+        {"_id": 0, "mood": 1}
     ).to_list(100)
     
     mood_counts = {}
