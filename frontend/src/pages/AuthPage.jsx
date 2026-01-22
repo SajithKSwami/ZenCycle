@@ -56,7 +56,7 @@ export default function AuthPage() {
 
         setIsLoading(true);
         try {
-            await register(registerEmail, registerPassword, firstName, lastName);
+            await register(registerEmail, registerPassword, firstName, lastName, linkedinUrl);
             toast.success('Account created successfully!');
             navigate('/dashboard');
         } catch (error) {
