@@ -52,6 +52,7 @@ class UserCreate(BaseModel):
     password: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    linkedin_url: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -65,6 +66,7 @@ class UserResponse(BaseModel):
     last_name: Optional[str] = None
     office_start_time: str = "09:00"
     office_end_time: str = "17:00"
+    linkedin_url: Optional[str] = None
     linkedin_headline: Optional[str] = None
     linkedin_role: Optional[str] = None
     career_goal: Optional[str] = None
@@ -75,6 +77,7 @@ class UserProfileUpdate(BaseModel):
     last_name: Optional[str] = None
     office_start_time: Optional[str] = None
     office_end_time: Optional[str] = None
+    linkedin_url: Optional[str] = None
     linkedin_headline: Optional[str] = None
     linkedin_role: Optional[str] = None
     career_goal: Optional[str] = None
