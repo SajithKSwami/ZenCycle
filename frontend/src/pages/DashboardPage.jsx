@@ -269,6 +269,8 @@ export default function DashboardPage() {
                 isOpen={showSettingsModal}
                 onClose={() => setShowSettingsModal(false)}
             />
+
+            <Footer />
         </div>
     );
 }
