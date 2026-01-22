@@ -50,12 +50,13 @@ export const AuthProvider = ({ children }) => {
         return response.user;
     };
 
-    const register = async (email, password, firstName, lastName) => {
+    const register = async (email, password, firstName, lastName, linkedinUrl) => {
         const response = await authApi.register({ 
             email, 
             password, 
             first_name: firstName, 
-            last_name: lastName 
+            last_name: lastName,
+            linkedin_url: linkedinUrl 
         });
         authStorage.setToken(response.access_token);
         authStorage.setUser(response.user);
