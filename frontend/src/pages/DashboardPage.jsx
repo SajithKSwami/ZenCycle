@@ -7,6 +7,7 @@ import { MoodCheckinModal } from '../components/MoodCheckinModal';
 import { EndOfDayModal } from '../components/EndOfDayModal';
 import { SettingsModal } from '../components/SettingsModal';
 import { useTimer } from '../hooks/useTimer';
+import { useNotification } from '../hooks/useNotification';
 import { useAuth } from '../context/AuthContext';
 import { moodApi, affirmationApi, waterApi, sessionApi, reflectionApi } from '../lib/api';
 import { isPastOfficeHours } from '../lib/utils';
@@ -15,6 +16,7 @@ import { Sparkles } from 'lucide-react';
 
 export default function DashboardPage() {
     const { user } = useAuth();
+    const { notifyBreakTime, notifyWaterReminder, notifyWorkComplete } = useNotification();
     const [showMoodModal, setShowMoodModal] = useState(false);
     const [showEndOfDayModal, setShowEndOfDayModal] = useState(false);
     const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -28,18 +30,25 @@ export default function DashboardPage() {
 
     // Timer callbacks
     const handleBreakStart = useCallback(() => {
+        // Send browser/mobile notification
+        notifyWorkComplete();
+        notifyBreakTime();
+        
         toast('Time for a break!', {
             description: 'Step away for 5 minutes. Your body will thank you.',
             icon: '🌿',
         });
-    }, []);
+    }, [notifyBreakTime, notifyWorkComplete]);
 
     const handleWaterReminder = useCallback(() => {
+        // Send browser/mobile notification
+        notifyWaterReminder();
+        
         toast('Hydration fuels focus', {
             description: 'Time to drink some water!',
             icon: '💧',
         });
-    }, []);
+    }, [notifyWaterReminder]);
 
     const handleSessionComplete = useCallback(() => {
         toast.success('Session complete!', {
