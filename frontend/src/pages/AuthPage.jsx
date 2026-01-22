@@ -145,6 +145,19 @@ export default function AuthPage() {
                                                 </button>
                                             </div>
                                         </div>
+                                        
+                                        {/* Forgot Password Link */}
+                                        <div className="text-right">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowForgotPassword(true)}
+                                                className="text-sm text-primary hover:underline"
+                                                data-testid="forgot-password-link"
+                                            >
+                                                Forgot password?
+                                            </button>
+                                        </div>
+                                        
                                         <Button
                                             type="submit"
                                             className="w-full rounded-full h-11"
