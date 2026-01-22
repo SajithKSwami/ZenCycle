@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Pause, RotateCcw, Coffee, Zap } from 'lucide-react';
+import { Play, Pause, RotateCcw, Coffee, Zap, Droplets } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn, formatTime } from '../lib/utils';
 
@@ -10,6 +10,7 @@ export const Timer = ({
     isRunning, 
     isPaused, 
     mode,
+    timeUntilWaterReminder,
     onStart,
     onPause,
     onResume,
@@ -24,6 +25,11 @@ export const Timer = ({
     const isWork = mode === 'work';
     const strokeColor = isWork ? 'hsl(var(--focus-timer))' : 'hsl(var(--break-timer))';
     const bgStrokeColor = 'hsl(var(--muted))';
+
+    // Format water reminder time
+    const waterMinutes = Math.floor(timeUntilWaterReminder / 60);
+    const waterSeconds = timeUntilWaterReminder % 60;
+    const waterTimeDisplay = `${waterMinutes}:${waterSeconds.toString().padStart(2, '0')}`;
 
     return (
         <div className="flex flex-col items-center gap-8" data-testid="timer-component">
@@ -111,6 +117,17 @@ export const Timer = ({
                     </p>
                 </div>
             </div>
+
+            {/* Water reminder countdown - only show during work mode when running */}
+            {isRunning && !isPaused && isWork && (
+                <div 
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-hydration/10 text-hydration text-sm font-medium animate-fade-in"
+                    data-testid="water-reminder-countdown"
+                >
+                    <Droplets className="w-4 h-4" />
+                    <span>Next water reminder in {waterTimeDisplay}</span>
+                </div>
+            )}
 
             {/* Controls */}
             <div className="flex items-center gap-4">
