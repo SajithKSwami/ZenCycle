@@ -7,6 +7,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import AuthPage from './pages/AuthPage';
 import DashboardPage from './pages/DashboardPage';
 import ProgressPage from './pages/ProgressPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import './App.css';
 
 const AppRoutes = () => {
@@ -28,6 +29,10 @@ const AppRoutes = () => {
             <Route 
                 path="/" 
                 element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <AuthPage />} 
+            />
+            <Route 
+                path="/reset-password" 
+                element={<ResetPasswordPage />} 
             />
             <Route
                 path="/dashboard"
