@@ -290,7 +290,7 @@ export default function AuthPage() {
                             <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-focus-timer/10 flex items-center justify-center">
                                 <span className="text-lg">⏱️</span>
                             </div>
-                            <p className="text-xs text-muted-foreground">90/5 Timer</p>
+                            <p className="text-xs text-muted-foreground">60/5 Timer</p>
                         </div>
                         <div className="p-4">
                             <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-hydration/10 flex items-center justify-center">
