@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import html2canvas from 'html2canvas';
 import { Header } from '../components/Header';
 import { SettingsModal } from '../components/SettingsModal';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
 import { progressApi } from '../lib/api';
-import { CheckCircle, Droplets, Coffee, TrendingUp, Calendar, Target } from 'lucide-react';
+import { CheckCircle, Droplets, Coffee, TrendingUp, Calendar, Target, Download, Leaf } from 'lucide-react';
+import { toast } from 'sonner';
 
 const MOOD_COLORS = {
     energized: '#F59E0B',
@@ -26,6 +29,8 @@ export default function ProgressPage() {
     const [period, setPeriod] = useState('weekly');
     const [stats, setStats] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isExporting, setIsExporting] = useState(false);
+    const reportRef = useRef(null);
 
     useEffect(() => {
         const loadStats = async () => {
@@ -42,6 +47,33 @@ export default function ProgressPage() {
 
         loadStats();
     }, [period]);
+
+    // Export report as image
+    const handleExportImage = async () => {
+        if (!reportRef.current) return;
+        
+        setIsExporting(true);
+        try {
+            const canvas = await html2canvas(reportRef.current, {
+                backgroundColor: null,
+                scale: 2,
+                useCORS: true,
+                logging: false,
+            });
+            
+            const link = document.createElement('a');
+            link.download = `zencycle-${period}-report-${new Date().toISOString().split('T')[0]}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            
+            toast.success('Report exported successfully!');
+        } catch (error) {
+            console.error('Export failed:', error);
+            toast.error('Failed to export report');
+        } finally {
+            setIsExporting(false);
+        }
+    };
 
     // Prepare mood chart data
     const moodChartData = stats?.mood_counts 
@@ -72,11 +104,32 @@ export default function ProgressPage() {
             <main className="container px-4 md:px-6 py-8">
                 <div className="max-w-5xl mx-auto">
                     {/* Page Header */}
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-heading font-bold">Progress</h1>
-                        <p className="text-muted-foreground mt-1">
-                            Track your wellness journey over time
-                        </p>
+                    <div className="mb-8 flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-heading font-bold">Progress</h1>
+                            <p className="text-muted-foreground mt-1">
+                                Track your wellness journey over time
+                            </p>
+                        </div>
+                        <Button
+                            onClick={handleExportImage}
+                            disabled={isExporting || isLoading}
+                            variant="outline"
+                            className="rounded-full"
+                            data-testid="export-report-btn"
+                        >
+                            {isExporting ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                                    Exporting...
+                                </>
+                            ) : (
+                                <>
+                                    <Download className="w-4 h-4 mr-2" />
+                                    Save as Image
+                                </>
+                            )}
+                        </Button>
                     </div>
 
                     {/* Period Tabs */}
@@ -100,9 +153,20 @@ export default function ProgressPage() {
                             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                         </div>
                     ) : (
-                        <>
+                        <div ref={reportRef} className="space-y-6 p-4 bg-background rounded-2xl">
+                            {/* Report Header for Export */}
+                            <div className="flex items-center gap-3 pb-4 border-b border-border">
+                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <Leaf className="w-6 h-6 text-primary" />
+                                </div>
+                                <div>
+                                    <h2 className="font-heading font-bold text-lg">ZenCycle Report</h2>
+                                    <p className="text-sm text-muted-foreground">{periodLabel[period]} • Generated {new Date().toLocaleDateString()}</p>
+                                </div>
+                            </div>
+
                             {/* Stats Cards */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <Card className="stat-card">
                                     <CardContent className="pt-6">
                                         <div className="flex items-center gap-3">
@@ -256,7 +320,7 @@ export default function ProgressPage() {
                             </div>
 
                             {/* Summary */}
-                            <Card className="mt-6">
+                            <Card>
                                 <CardHeader>
                                     <CardTitle className="text-lg flex items-center gap-2">
                                         <Target className="w-5 h-5 text-primary" />
@@ -286,7 +350,7 @@ export default function ProgressPage() {
                                     </div>
                                 </CardContent>
                             </Card>
-                        </>
+                        </div>
                     )}
                 </div>
             </main>
