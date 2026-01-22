@@ -360,6 +360,8 @@ export default function ProgressPage() {
                 isOpen={showSettingsModal}
                 onClose={() => setShowSettingsModal(false)}
             />
+
+            <Footer />
         </div>
     );
 }
