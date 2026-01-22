@@ -1,34 +1,128 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
-}
+/* ZenCycle App Styles */
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
-}
-
-.App-header {
-    background-color: #0f0f10;
+/* Remove default text-align center */
+.App {
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
 }
 
-.App-link {
-    color: #61dafb;
+/* Timer specific styles */
+.timer-container {
+    position: relative;
 }
 
-@keyframes App-logo-spin {
+.timer-svg {
+    transform: rotate(-90deg);
+}
+
+.timer-progress {
+    transition: stroke-dashoffset 1s linear;
+}
+
+/* Card hover effects */
+.stat-card {
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Button interactions */
+.btn-scale {
+    transition: transform 0.15s ease-out;
+}
+
+.btn-scale:hover {
+    transform: scale(1.02);
+}
+
+.btn-scale:active {
+    transform: scale(0.98);
+}
+
+/* Mood button styles */
+.mood-btn {
+    transition: all 0.2s ease-out;
+}
+
+.mood-btn:hover {
+    transform: translateY(-2px);
+}
+
+.mood-btn.selected {
+    transform: scale(1.05);
+}
+
+/* Animation delays for staggered entrance */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+
+/* Water drop animation */
+@keyframes waterDrop {
+    0% { transform: translateY(-20px); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+.water-drop {
+    animation: waterDrop 0.4s ease-out;
+}
+
+/* Affirmation text animation */
+@keyframes typewriter {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.affirmation-text {
+    animation: typewriter 0.8s ease-out;
+}
+
+/* Progress bar animation */
+@keyframes progressFill {
+    from { width: 0; }
+    to { width: var(--progress-width); }
+}
+
+.progress-animate {
+    animation: progressFill 1s ease-out forwards;
+}
+
+/* Theme toggle animation */
+.theme-toggle {
+    transition: transform 0.3s ease-out;
+}
+
+.theme-toggle:hover {
+    transform: rotate(15deg);
+}
+
+/* Focus ring customization */
+.focus-ring:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.2);
+}
+
+/* Glass effect for modals */
+.glass-modal {
+    background: hsl(var(--card) / 0.95);
+    backdrop-filter: blur(16px);
+}
+
+/* Smooth page transitions */
+.page-transition {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
     from {
-        transform: rotate(0deg);
+        opacity: 0;
+        transform: translateY(8px);
     }
     to {
-        transform: rotate(360deg);
+        opacity: 1;
+        transform: translateY(0);
     }
 }
