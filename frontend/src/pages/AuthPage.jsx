@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { useAuth } from '../context/AuthContext';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { ForgotPasswordModal } from '../components/ForgotPasswordModal';
 import { toast } from 'sonner';
 
 export default function AuthPage() {
@@ -15,6 +16,7 @@ export default function AuthPage() {
     const { login, register } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [showForgotPassword, setShowForgotPassword] = useState(false);
     
     // Login form
     const [loginEmail, setLoginEmail] = useState('');
