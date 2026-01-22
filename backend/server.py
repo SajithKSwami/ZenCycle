@@ -218,6 +218,7 @@ async def register(user_data: UserCreate):
         "last_name": user_data.last_name,
         "office_start_time": "09:00",
         "office_end_time": "17:00",
+        "linkedin_url": user_data.linkedin_url,
         "linkedin_headline": None,
         "linkedin_role": None,
         "career_goal": None,
@@ -233,6 +234,7 @@ async def register(user_data: UserCreate):
         email=user_data.email,
         first_name=user_data.first_name,
         last_name=user_data.last_name,
+        linkedin_url=user_data.linkedin_url,
         created_at=now
     )
     
@@ -252,6 +254,7 @@ async def login(user_data: UserLogin):
         last_name=user.get("last_name"),
         office_start_time=user.get("office_start_time", "09:00"),
         office_end_time=user.get("office_end_time", "17:00"),
+        linkedin_url=user.get("linkedin_url"),
         linkedin_headline=user.get("linkedin_headline"),
         linkedin_role=user.get("linkedin_role"),
         career_goal=user.get("career_goal"),
