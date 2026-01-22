@@ -204,6 +204,7 @@ export default function DashboardPage() {
                                 isRunning={timer.isRunning}
                                 isPaused={timer.isPaused}
                                 mode={timer.mode}
+                                timeUntilWaterReminder={timer.timeUntilWaterReminder}
                                 onStart={timer.start}
                                 onPause={timer.pause}
                                 onResume={timer.resume}
