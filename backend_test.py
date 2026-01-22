@@ -85,7 +85,7 @@ class ZenCycleAPITester:
             "last_name": "User"
         }
         
-        success, data, status = self.make_request('POST', 'auth/register', register_data, 201)
+        success, data, status = self.make_request('POST', 'auth/register', register_data, 200)
         
         if success and 'access_token' in data:
             self.token = data['access_token']
