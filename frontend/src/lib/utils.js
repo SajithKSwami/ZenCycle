@@ -83,11 +83,17 @@ export const timerStorage = {
         // Calculate elapsed time since save
         const elapsed = Math.floor((Date.now() - state.savedAt) / 1000);
         
-        if (state.isRunning) {
+        if (state.isRunning && !state.isPaused) {
             const newTimeLeft = Math.max(0, state.timeLeft - elapsed);
+            // Also update water timer if it was running
+            const newWaterTimerSeconds = (state.waterTimerSeconds || 0) + elapsed;
+            // Reset water timer if it exceeded 30 min interval
+            const waterTimerReset = newWaterTimerSeconds >= 30 * 60 ? newWaterTimerSeconds % (30 * 60) : newWaterTimerSeconds;
+            
             return {
                 ...state,
                 timeLeft: newTimeLeft,
+                waterTimerSeconds: state.mode === 'work' ? waterTimerReset : 0,
                 isRunning: newTimeLeft > 0
             };
         }
