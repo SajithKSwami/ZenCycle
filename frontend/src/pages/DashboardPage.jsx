@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from '../components/Header';
+import { Footer } from '../components/Footer';
 import { Timer } from '../components/Timer';
 import { WaterTracker } from '../components/WaterTracker';
 import { DailyStats } from '../components/DailyStats';
