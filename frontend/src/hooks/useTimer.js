@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { timerStorage } from '../lib/utils';
 import { sessionApi } from '../lib/api';
 
-const WORK_DURATION = 90 * 60; // 90 minutes in seconds
+const WORK_DURATION = 60 * 60; // 60 minutes in seconds
 const BREAK_DURATION = 5 * 60; // 5 minutes in seconds
 const WATER_REMINDER_INTERVAL = 30 * 60; // 30 minutes in seconds
 
@@ -129,7 +129,7 @@ export const useTimer = (onBreakStart, onWaterReminder, onSessionComplete) => {
                 await sessionApi.update(currentSessionId, {
                     completed: true,
                     end_time: new Date().toISOString(),
-                    duration_minutes: mode === 'work' ? 90 : 5,
+                    duration_minutes: mode === 'work' ? 60 : 5,
                 });
             } catch (error) {
                 console.error('Failed to update session:', error);
