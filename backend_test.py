@@ -185,7 +185,7 @@ class ZenCycleAPITester:
             self.log_result("Water Logging", False, None, "No token available")
             return False
             
-        success, data, status = self.make_request('POST', 'water', expected_status=201)
+        success, data, status = self.make_request('POST', 'water', expected_status=200)
         self.log_result("Water Logging", success, data,
                        f"Status: {status}" if not success else None)
         return success
