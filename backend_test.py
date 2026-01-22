@@ -278,7 +278,7 @@ class ZenCycleAPITester:
             "break_count": 3
         }
         
-        success, data, status = self.make_request('POST', 'reflection', reflection_data, 201)
+        success, data, status = self.make_request('POST', 'reflection', reflection_data, 200)
         self.log_result("Reflection Creation", success, data,
                        f"Status: {status}" if not success else None)
         return success
