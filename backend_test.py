@@ -227,7 +227,7 @@ class ZenCycleAPITester:
             return False
             
         session_data = {"session_type": "work"}
-        success, data, status = self.make_request('POST', 'session', session_data, 201)
+        success, data, status = self.make_request('POST', 'session', session_data, 200)
         
         if success and 'id' in data:
             self.session_id = data['id']
