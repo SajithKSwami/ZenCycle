@@ -131,7 +131,7 @@ class ZenCycleAPITester:
             return False
             
         mood_data = {"mood": "energized"}
-        success, data, status = self.make_request('POST', 'mood', mood_data, 201)
+        success, data, status = self.make_request('POST', 'mood', mood_data, 200)
         self.log_result("Mood Check-in", success, data,
                        f"Status: {status}" if not success else None)
         return success
