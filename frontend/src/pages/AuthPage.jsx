@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Leaf, Mail, Lock, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Leaf, Mail, Lock, User, ArrowRight, Eye, EyeOff, Linkedin } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -25,6 +25,7 @@ export default function AuthPage() {
     const [registerPassword, setRegisterPassword] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
+    const [linkedinUrl, setLinkedinUrl] = useState('');
 
     const handleLogin = async (e) => {
         e.preventDefault();
