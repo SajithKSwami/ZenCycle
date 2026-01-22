@@ -158,7 +158,7 @@ export const SettingsModal = ({ isOpen, onClose }) => {
                                 <strong>Timer Configuration:</strong>
                             </p>
                             <ul className="text-sm text-muted-foreground mt-2 space-y-1">
-                                <li>• Work session: 90 minutes</li>
+                                <li>• Work session: 60 minutes</li>
                                 <li>• Break: 5 minutes</li>
                                 <li>• Water reminders: Every 30 minutes</li>
                             </ul>
