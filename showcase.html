@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenCycle | Wellness in Motion</title>
+    <!-- Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,900;1,900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --accent: #10b981;
+            --accent-soft: rgba(16, 185, 129, 0.1);
+        }
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        .serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .atmosphere {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 40%);
+        }
+
+        .blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            filter: blur(80px);
+            border-radius: 50%;
+            z-index: -2;
+            opacity: 0.4;
+            animation: move 20s infinite alternate ease-in-out;
+        }
+
+        @keyframes move {
+            from { transform: translate(-10%, -10%) rotate(0deg); }
+            to { transform: translate(20%, 20%) rotate(180deg); }
+        }
+
+        .nav-item.active {
+            color: var(--accent);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -10px rgba(0,0,0,0.1);
+        }
+
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .pulse-soft {
+            animation: pulse-soft 3s infinite ease-in-out;
+        }
+
+        /* Hide scrollbars but keep functionality */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="safe-area-bottom">
+    <div class="atmosphere"></div>
+    <div class="blob bg-emerald-100 top-0 left-0"></div>
+    <div class="blob bg-blue-50 bottom-0 right-0" style="animation-delay: -5s;"></div>
+
+    <div id="app" class="max-w-md mx-auto min-h-screen relative flex flex-col">
+        
+        <!-- Header -->
+        <header class="p-6 flex justify-between items-center sticky top-0 z-50">
+            <div>
+                <h1 class="text-2xl font-black text-slate-800 tracking-tight">ZenCycle</h1>
+                <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-600">Wellness in Motion</p>
+            </div>
+            <div class="flex gap-4">
+                <button class="w-10 h-10 rounded-full glass flex items-center justify-center text-slate-600">
+                    <i data-lucide="bell" size="18"></i>
+                </button>
+                <div class="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white font-bold text-xs ring-4 ring-white">
+                    JS
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 px-6 pb-32 space-y-8">
+            
+            <!-- User Status -->
+            <section class="animate-in fade-in slide-in-from-top-4 duration-700">
+                <h2 class="serif text-4xl mb-2 italic">How are you feeling, <span class="text-emerald-600">John?</span></h2>
+                <div class="flex gap-2">
+                    <button class="px-4 py-2 rounded-full glass text-xs font-bold text-slate-600 flex items-center gap-2 hover:bg-white transition-colors">
+                        <i data-lucide="smile" size="14"></i> Log Mood
+                    </button>
+                </div>
+            </section>
+
+            <!-- Focus Timer -->
+            <section class="glass p-8 rounded-[48px] shadow-sm relative overflow-hidden group">
+                <div class="absolute -top-12 -right-12 w-32 h-32 bg-emerald-50 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
+                
+                <div class="relative z-10 text-center space-y-6">
+                    <div class="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-soft"></span>
+                        Work Session
+                    </div>
+                    
+                    <div class="text-7xl font-light tracking-tighter text-slate-800" id="timer">25:00</div>
+                    
+                    <div class="flex items-center justify-center gap-6">
+                        <button id="toggleBtn" class="w-16 h-16 rounded-3xl bg-slate-900 text-white flex items-center justify-center shadow-xl shadow-slate-200 active:scale-95 transition-all">
+                            <i data-lucide="play" fill="white"></i>
+                        </button>
+                        <button class="w-12 h-12 rounded-2xl glass text-slate-400 flex items-center justify-center active:scale-95 transition-all">
+                            <i data-lucide="refresh-cw" size="20"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Actions Grid -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass p-6 rounded-[32px] space-y-4 cursor-pointer card-hover transition-all">
+                    <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <i data-lucide="droplets" size="20"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Hydration</p>
+                        <p class="text-lg font-bold text-slate-800">4 <span class="text-xs text-slate-400 font-medium">/ 8 glasses</span></p>
+                    </div>
+                </div>
+                <div class="glass p-6 rounded-[32px] space-y-4 cursor-pointer card-hover transition-all">
+                    <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                        <i data-lucide="zap" size="20"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Focus Score</p>
+                        <p class="text-lg font-bold text-slate-800">82 <span class="text-xs text-slate-400 font-medium">avg</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Affirmation Quote -->
+            <div class="p-8 rounded-[40px] bg-slate-900 text-white relative overflow-hidden group">
+                <div class="absolute inset-0 opacity-10">
+                    <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <path d="M0 100 C 20 0 50 0 100 100" stroke="white" fill="transparent" stroke-width="0.5"/>
+                    </svg>
+                </div>
+                <i data-lucide="quote" class="text-emerald-400 mb-4 opacity-50" size="24"></i>
+                <p class="text-xl font-medium leading-relaxed mb-6 italic">
+                    "Growth happens in the quiet moments between actions."
+                </p>
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        <i data-lucide="sparkles" size="14"></i>
+                    </div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-emerald-400">Personal Growth AI</span>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Navigation Bar -->
+        <nav class="fixed bottom-6 left-6 right-6 h-20 glass rounded-[32px] flex items-center justify-around px-4 shadow-2xl z-50">
+            <button class="nav-item active flex flex-col items-center gap-1">
+                <i data-lucide="home" size="20"></i>
+                <span class="text-[10px] font-bold">Home</span>
+            </button>
+            <button class="nav-item text-slate-400 flex flex-col items-center gap-1">
+                <i data-lucide="bar-chart-2" size="20"></i>
+                <span class="text-[10px] font-bold">Stats</span>
+            </button>
+            <button class="nav-item text-slate-400 flex flex-col items-center gap-1">
+                <i data-lucide="calendar" size="20"></i>
+                <span class="text-[10px] font-bold">Flow</span>
+            </button>
+            <button class="nav-item text-slate-400 flex flex-col items-center gap-1">
+                <i data-lucide="user" size="20"></i>
+                <span class="text-[10px] font-bold">Zen</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Timer Logic
+        let timeLeft = 25 * 60;
+        let isRunning = false;
+        let timerInterval;
+
+        const timerDisplay = document.getElementById('timer');
+        const toggleBtn = document.getElementById('toggleBtn');
+
+        function updateDisplay() {
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            timerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        toggleBtn.addEventListener('click', () => {
+            isRunning = !isRunning;
+            const icon = toggleBtn.querySelector('i');
+            
+            if (isRunning) {
+                icon.setAttribute('data-lucide', 'pause');
+                timerInterval = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                    }
+                }, 1000);
+            } else {
+                icon.setAttribute('data-lucide', 'play');
+                clearInterval(timerInterval);
+            }
+            lucide.createIcons();
+        });
+
+        // Simple Tab Mock
+        document.querySelectorAll('.nav-item').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active', 'text-emerald-600'));
+                document.querySelectorAll('.nav-item').forEach(b => b.classList.add('text-slate-400'));
+                btn.classList.add('active', 'text-emerald-600');
+                btn.classList.remove('text-slate-400');
+            });
+        });
+    </script>
+</body>
+</html>

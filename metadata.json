@@ -1,0 +1,8 @@
+{
+  "name": "ZenCycle - Wellness in Motion",
+  "description": "A wellness and productivity tracker enhanced with the Tock precision timing engine for accurate 90-minute work cycles, AI-powered affirmations, and hydration tracking.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": []
+}

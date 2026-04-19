@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "JournalEntry": {
+      "title": "Journal Entry",
+      "description": "A daily reflection log.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner of the entry" },
+        "dateTime": { "type": "string", "format": "date-time", "description": "Auto-logged from device" },
+        "achievement": { "type": "string", "description": "Achievement of the day" },
+        "learnings": { "type": "array", "items": { "type": "string" }, "description": "Key insights" },
+        "goodMoments": { "type": "array", "items": { "type": "string" }, "description": "Positive moments" },
+        "okMoments": { "type": "array", "items": { "type": "string" }, "description": "Neutral moments" },
+        "sadMoments": { "type": "array", "items": { "type": "string" }, "description": "Difficult moments" },
+        "reflectionSummary": { "type": "string", "description": "AI generated summary" },
+        "moodScore": { "type": "integer", "minimum": 1, "maximum": 10, "description": "Optional 1-10 mood score" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "dateTime", "achievement", "reflectionSummary"]
+    },
+    "BreakSession": {
+      "title": "Break Session",
+      "description": "A log of an individual break taken during work.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner of the session" },
+        "date": { "type": "string", "format": "date", "description": "The day this break occurred" },
+        "startTime": { "type": "string", "format": "date-time" },
+        "endTime": { "type": "string", "format": "date-time" },
+        "durationSeconds": { "type": "integer" },
+        "notes": { "type": "string", "description": "Optional notes for the break" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "startTime", "endTime", "durationSeconds"]
+    },
+    "DailyBreakSummary": {
+      "title": "Daily Break Summary",
+      "description": "Aggregated break stats for a specific day.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "totalBreaks": { "type": "integer" },
+        "totalDurationSeconds": { "type": "integer" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "totalBreaks", "totalDurationSeconds"]
+    }
+  },
+  "firestore": {
+    "/journalEntries/{entryId}": {
+      "schema": "JournalEntry",
+      "description": "User journal entries."
+    },
+    "/breakSessions/{sessionId}": {
+      "schema": "BreakSession",
+      "description": "Individual break sessions."
+    },
+    "/dailyBreakSummaries/{summaryId}": {
+      "schema": "DailyBreakSummary",
+      "description": "Aggregated daily break statistics."
+    }
+  }
+}
