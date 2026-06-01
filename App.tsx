@@ -1,7 +1,9 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-// Fix: Added missing Zap and Smile icon imports
-import { Settings as SettingsIcon, Bell, Droplets, MapPin, CheckCircle2, X, Zap, Smile, Calendar as CalendarIcon } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Settings as SettingsIcon, Bell, Droplets, CheckCircle2, X, Zap, Smile, LogOut } from 'lucide-react';
+import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { db } from './src/firebase';
+import { useAuth } from './context/AuthContext';
 import BottomNav from './components/BottomNav';
 import TimerDisplay from './components/TimerDisplay';
 import Dashboard from './components/Dashboard';
@@ -30,69 +32,104 @@ import Markdown from 'react-markdown';
 import * as Analytics from './services/analytics';
 
 const App: React.FC = () => {
-  // Tabs: home, progress, settings
+  const { user: authUser, logout } = useAuth();
+  const uid = authUser?.uid ?? '';
+  // Derive first name from Firebase displayName
+  const firstName = authUser?.displayName?.split(' ')[0] ?? '';
+
   const [activeTab, setActiveTab] = useState('home');
   const [showMoodModal, setShowMoodModal] = useState(false);
   const [showReflectionModal, setShowReflectionModal] = useState(false);
   const [isLoadingAffirmation, setIsLoadingAffirmation] = useState(false);
   const [reflectionStep, setReflectionStep] = useState(1);
   const [journalData, setJournalData] = useState({
-    achievement: '',
-    learnings: '',
-    goodMoments: '',
-    okMoments: '',
-    sadMoments: ''
+    achievement: '', learnings: '', goodMoments: '', okMoments: '', sadMoments: ''
   });
   const [isGeneratingJournal, setIsGeneratingJournal] = useState(false);
+  const [dataReady, setDataReady] = useState(false);
 
-  // Persistence State
-  const [user, setUser] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('zencycle_user');
-    const defaultUser = {
-      firstName: '', lastName: '', headline: '', role: '', careerGoal: '',
-      officeStartTime: DEFAULT_OFFICE_START, officeEndTime: DEFAULT_OFFICE_END,
-      hydrationGoal: 8
-    };
-    return saved ? { ...defaultUser, ...JSON.parse(saved) } : defaultUser;
+  // Profile state
+  const [user, setUser] = useState<UserProfile>({
+    firstName: '', lastName: '', headline: '', role: '', careerGoal: '',
+    officeStartTime: DEFAULT_OFFICE_START, officeEndTime: DEFAULT_OFFICE_END,
+    hydrationGoal: 8
   });
 
-  const [daily, setDaily] = useState<DailyState>(() => {
-    const saved = localStorage.getItem('zencycle_daily');
-    const today = new Date().toISOString().split('T')[0];
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed.date === today) return parsed;
-    }
-    return {
-      date: today, waterIntake: 0, completedWorkSessions: 0, 
-      completedBreaks: 0, reflectionCompleted: false, breakLocations: []
-    };
+  const today = new Date().toISOString().split('T')[0];
+
+  const [daily, setDaily] = useState<DailyState>({
+    date: today, waterIntake: 0, completedWorkSessions: 0,
+    completedBreaks: 0, reflectionCompleted: false, breakLocations: []
   });
 
+  // Timer stays in localStorage (per-device, ephemeral)
   const [timer, setTimer] = useState<TimerState>(() => {
-    const saved = localStorage.getItem('zencycle_timer');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Calculate elapsed if was running
-      if (parsed.startTime && !parsed.isPaused) {
-        const elapsed = Math.floor((Date.now() - parsed.startTime) / 1000);
-        const remaining = Math.max(0, parsed.remainingSeconds - elapsed);
-        return { ...parsed, remainingSeconds: remaining, startTime: Date.now() };
+    try {
+      const saved = localStorage.getItem('zencycle_timer');
+      if (saved) {
+        const parsed = JSON.parse(saved) as TimerState;
+        if (parsed.startTime && !parsed.isPaused) {
+          const elapsed = Math.floor((Date.now() - parsed.startTime) / 1000);
+          return { ...parsed, remainingSeconds: Math.max(0, parsed.remainingSeconds - elapsed), startTime: Date.now() };
+        }
+        return parsed;
       }
-      return parsed;
-    }
+    } catch { /* ignore */ }
     return { type: SessionType.Work, startTime: null, isPaused: true, remainingSeconds: WORK_SESSION_SECONDS };
   });
 
-  const [history, setHistory] = useState<HistoricalRecord[]>(() => {
-    const saved = localStorage.getItem('zencycle_history');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [history, setHistory] = useState<HistoricalRecord[]>([]);
+  const [calendar, setCalendar] = useState<CalendarSession[]>([]);
 
-  const [calendar, setCalendar] = useState<CalendarSession[]>(() => {
-    const saved = localStorage.getItem('zencycle_calendar');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // ── Load data from Firestore on mount ──────────────────────────────────────
+  useEffect(() => {
+    if (!uid) return;
+    const load = async () => {
+      try {
+        // Profile
+        const profileSnap = await getDoc(doc(db, 'users', uid, 'data', 'profile'));
+        if (profileSnap.exists()) setUser(profileSnap.data() as UserProfile);
+
+        // Today's daily state
+        const dailySnap = await getDoc(doc(db, 'users', uid, 'daily', today));
+        if (dailySnap.exists()) setDaily(dailySnap.data() as DailyState);
+
+        // History (last 14 days)
+        const histSnap = await getDocs(
+          query(collection(db, 'users', uid, 'history'), orderBy('date', 'desc'), limit(14))
+        );
+        setHistory(histSnap.docs.map(d => d.data() as HistoricalRecord));
+
+        // Calendar
+        const calSnap = await getDocs(
+          query(collection(db, 'users', uid, 'calendar'), orderBy('startTime', 'desc'), limit(50))
+        );
+        setCalendar(calSnap.docs.map(d => ({ ...d.data(), id: d.id }) as CalendarSession));
+      } catch (e) {
+        console.error('Failed to load from Firestore:', e);
+      } finally {
+        setDataReady(true);
+      }
+    };
+    load();
+  }, [uid, today]);
+
+  // ── Persist profile to Firestore ───────────────────────────────────────────
+  useEffect(() => {
+    if (!uid || !dataReady) return;
+    setDoc(doc(db, 'users', uid, 'data', 'profile'), user, { merge: true }).catch(console.error);
+  }, [user, uid, dataReady]);
+
+  // ── Persist daily state to Firestore ──────────────────────────────────────
+  useEffect(() => {
+    if (!uid || !dataReady) return;
+    setDoc(doc(db, 'users', uid, 'daily', today), daily, { merge: true }).catch(console.error);
+  }, [daily, uid, today, dataReady]);
+
+  // ── Timer stays in localStorage ───────────────────────────────────────────
+  useEffect(() => {
+    try { localStorage.setItem('zencycle_timer', JSON.stringify(timer)); } catch { /* ignore */ }
+  }, [timer]);
 
   // Tock Precision Timer Integration
   const tock = useTock({
@@ -263,12 +300,7 @@ const App: React.FC = () => {
     }
   }, [timer.remainingSeconds, timer.isPaused, timer.type, handleTimerComplete]);
 
-  // Sync state to localstorage
-  useEffect(() => { localStorage.setItem('zencycle_user', JSON.stringify(user)); }, [user]);
-  useEffect(() => { localStorage.setItem('zencycle_daily', JSON.stringify(daily)); }, [daily]);
-  useEffect(() => { localStorage.setItem('zencycle_timer', JSON.stringify(timer)); }, [timer]);
-  useEffect(() => { localStorage.setItem('zencycle_history', JSON.stringify(history)); }, [history]);
-  useEffect(() => { localStorage.setItem('zencycle_calendar', JSON.stringify(calendar)); }, [calendar]);
+  // (persistence handled by Firestore effects above)
 
   // Check for mood prompt or reflection prompt
   useEffect(() => {
@@ -305,6 +337,11 @@ const App: React.FC = () => {
     
     setCalendar(prev => [...prev, event]);
 
+    // Save calendar event to Firestore
+    if (uid) {
+      addDoc(collection(db, 'users', uid, 'calendar'), event).catch(console.error);
+    }
+
     setIsLoadingAffirmation(false);
     setShowMoodModal(false);
   };
@@ -339,18 +376,22 @@ const App: React.FC = () => {
     const entry = await generateJournalEntry(inputs);
     Analytics.logJournalEntry(inputs.achievement);
 
-    const today = new Date().toISOString().split('T')[0];
     const newRecord: HistoricalRecord = {
       date: today,
       water: daily.waterIntake,
       sessions: daily.completedWorkSessions,
       mood: daily.mood
     };
-    
+
     setHistory(prev => {
       const filtered = prev.filter(r => r.date !== today);
-      return [...filtered, newRecord].slice(-14); // Keep 14 days
+      return [...filtered, newRecord].slice(-14);
     });
+
+    // Save history record to Firestore
+    if (uid) {
+      setDoc(doc(db, 'users', uid, 'history', today), newRecord).catch(console.error);
+    }
 
     setDaily(prev => ({ ...prev, reflectionText: entry, reflectionCompleted: true }));
     setIsGeneratingJournal(false);
@@ -368,12 +409,17 @@ const App: React.FC = () => {
           </div>
           <div>
             <h1 className="text-sm font-bold tracking-tight">ZenCycle</h1>
-            <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">In Motion</p>
+            <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">
+              {firstName ? `Hey, ${firstName}` : 'In Motion'}
+            </p>
           </div>
         </div>
         <div className="flex gap-2">
           <button onClick={() => setActiveTab('settings')} className="p-2.5 rounded-2xl bg-white border border-slate-100 shadow-sm text-slate-400">
             <SettingsIcon size={20} />
+          </button>
+          <button onClick={logout} title="Sign out" className="p-2.5 rounded-2xl bg-white border border-slate-100 shadow-sm text-slate-400">
+            <LogOut size={20} />
           </button>
         </div>
       </header>
@@ -552,7 +598,9 @@ const App: React.FC = () => {
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-6">
           <div className="bg-white w-full max-w-md rounded-[40px] p-8 shadow-2xl space-y-8 animate-in fade-in zoom-in duration-300">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-slate-800">Good Morning!</h2>
+              <h2 className="text-2xl font-bold text-slate-800">
+                Good Morning{firstName ? `, ${firstName}` : ''}! 👋
+              </h2>
               <p className="text-slate-400 mt-2">How are you starting your day today?</p>
             </div>
             
