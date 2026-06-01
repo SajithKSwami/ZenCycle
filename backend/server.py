@@ -739,12 +739,17 @@ async def health_check():
 # Include the router in the main app
 app.include_router(api_router)
 
+_cors_origins_raw = os.environ.get('CORS_ORIGINS', '')
+_cors_origins = [o.strip() for o in _cors_origins_raw.split(',') if o.strip()]
+if not _cors_origins:
+    raise RuntimeError("CORS_ORIGINS env var is required and must list allowed origins (e.g. http://localhost:3000)")
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_cors_origins,
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 @app.on_event("shutdown")
