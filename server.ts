@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
+import { GoogleGenAI } from '@google/genai';
 import journalRoutes from './src/server/routes/journalRoutes.ts';
 import breakRoutes from './src/server/routes/breakRoutes.ts';
 
@@ -40,6 +41,25 @@ async function startServer() {
 
   // Rate limit all API routes
   app.use('/api', apiLimiter);
+
+  // Gemini proxy — keeps API key server-side only
+  const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY ?? '' });
+  app.post('/api/gemini', async (req, res) => {
+    const { prompt } = req.body as { prompt?: string };
+    if (!prompt || typeof prompt !== 'string' || prompt.length > 4000) {
+      res.status(400).json({ error: 'Invalid prompt' });
+      return;
+    }
+    try {
+      const result = await genai.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: prompt,
+      });
+      res.json({ text: result.text });
+    } catch {
+      res.status(502).json({ error: 'Gemini request failed' });
+    }
+  });
 
   // API Routes
   app.use('/api/journal', journalRoutes);
