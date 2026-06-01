@@ -19,6 +19,10 @@ const AuthPage: React.FC = () => {
     e.preventDefault();
     setError('');
     setInfo('');
+    if (mode !== 'reset' && password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
     setBusy(true);
     try {
       if (mode === 'login') {
@@ -30,8 +34,24 @@ const AuthPage: React.FC = () => {
         setInfo('Password reset email sent — check your inbox.');
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Something went wrong.';
-      setError(msg.replace('Firebase: ', '').replace(/\(auth\/.*\)\.?/, '').trim());
+      const raw = err instanceof Error ? err.message : String(err);
+      console.error('Auth error:', err);
+      // Map Firebase error codes to friendly messages
+      if (raw.includes('auth/email-already-in-use')) {
+        setError('An account with this email already exists. Try signing in instead.');
+      } else if (raw.includes('auth/weak-password')) {
+        setError('Password must be at least 6 characters.');
+      } else if (raw.includes('auth/invalid-email')) {
+        setError('Please enter a valid email address.');
+      } else if (raw.includes('auth/user-not-found') || raw.includes('auth/wrong-password') || raw.includes('auth/invalid-credential')) {
+        setError('Incorrect email or password.');
+      } else if (raw.includes('auth/too-many-requests')) {
+        setError('Too many attempts. Please wait a few minutes and try again.');
+      } else if (raw.includes('auth/network-request-failed')) {
+        setError('Network error. Check your connection and try again.');
+      } else {
+        setError(raw.replace('Firebase: ', '').trim());
+      }
     } finally {
       setBusy(false);
     }
