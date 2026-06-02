@@ -318,32 +318,32 @@ const App: React.FC = () => {
 
   const handleMoodSelect = async (m: Mood) => {
     setIsLoadingAffirmation(true);
-    const aff = await generateAffirmation(m, user.careerGoal);
-    setDaily(prev => ({ ...prev, mood: m, affirmation: aff }));
-    
-    // Create Calendar Event for Affirmation
-    const now = new Date();
-    const reminderTime = new Date(now.getTime() + 2 * 60 * 60 * 1000); // Remind in 2 hours
-    
-    const event: CalendarSession = {
-      id: `aff-${Date.now()}`,
-      title: "Self-Affirmation Moment",
-      description: `Affirmation: ${aff}\n\nRevisit this to maintain your ${m} perspective.`,
-      startTime: now.toISOString(),
-      endTime: new Date(now.getTime() + 15 * 60000).toISOString(),
-      type: 'affirmation',
-      reminderTime: reminderTime.toISOString()
-    };
-    
-    setCalendar(prev => [...prev, event]);
+    try {
+      const aff = await generateAffirmation(m, user.careerGoal);
+      setDaily(prev => ({ ...prev, mood: m, affirmation: aff }));
 
-    // Save calendar event to Firestore
-    if (uid) {
-      addDoc(collection(db, 'users', uid, 'calendar'), event).catch(console.error);
+      const now = new Date();
+      const reminderTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+      const event: CalendarSession = {
+        id: `aff-${Date.now()}`,
+        title: "Self-Affirmation Moment",
+        description: `Affirmation: ${aff}\n\nRevisit this to maintain your ${m} perspective.`,
+        startTime: now.toISOString(),
+        endTime: new Date(now.getTime() + 15 * 60000).toISOString(),
+        type: 'affirmation',
+        reminderTime: reminderTime.toISOString()
+      };
+      setCalendar(prev => [...prev, event]);
+      if (uid) {
+        addDoc(collection(db, 'users', uid, 'calendar'), event).catch(console.error);
+      }
+    } catch (e) {
+      console.error('Affirmation error:', e);
+      setDaily(prev => ({ ...prev, mood: m, affirmation: 'You are capable and making progress every day.' }));
+    } finally {
+      setIsLoadingAffirmation(false);
+      setShowMoodModal(false);
     }
-
-    setIsLoadingAffirmation(false);
-    setShowMoodModal(false);
   };
 
   const logWater = () => {
@@ -352,16 +352,11 @@ const App: React.FC = () => {
 
   const completeReflection = async () => {
     setIsGeneratingJournal(true);
-    
-    // Auto-log current date and time
+    try {
     const now = new Date();
-    const dateTimeStr = now.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    const dateTimeStr = now.toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long',
+      day: 'numeric', hour: '2-digit', minute: '2-digit'
     });
 
     const inputs: JournalInputs = {
@@ -394,9 +389,13 @@ const App: React.FC = () => {
     }
 
     setDaily(prev => ({ ...prev, reflectionText: entry, reflectionCompleted: true }));
-    setIsGeneratingJournal(false);
     setShowReflectionModal(false);
-    setReflectionStep(1); // Reset for next time
+    setReflectionStep(1);
+    } catch (e) {
+      console.error('Journal generation error:', e);
+    } finally {
+      setIsGeneratingJournal(false);
+    }
   };
 
   return (
